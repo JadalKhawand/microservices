@@ -11,7 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{04FF99B1-19A1-40B8-94FA-CD78C17018C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microservices.Services.CouponAPI", "Microservices.Services.CouponAPI\Microservices.Services.CouponAPI.csproj", "{B09A9C18-D1C7-4269-B425-E2656B443482}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservices.Services.CouponAPI", "Microservices.Services.CouponAPI\Microservices.Services.CouponAPI.csproj", "{B09A9C18-D1C7-4269-B425-E2656B443482}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "microservices.test", "microservices.test\microservices.test.csproj", "{3A302313-2B8A-4A99-9FFC-F1E04934F408}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +25,10 @@ Global
 		{B09A9C18-D1C7-4269-B425-E2656B443482}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B09A9C18-D1C7-4269-B425-E2656B443482}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B09A9C18-D1C7-4269-B425-E2656B443482}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A302313-2B8A-4A99-9FFC-F1E04934F408}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A302313-2B8A-4A99-9FFC-F1E04934F408}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A302313-2B8A-4A99-9FFC-F1E04934F408}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A302313-2B8A-4A99-9FFC-F1E04934F408}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
