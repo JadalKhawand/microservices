@@ -25,7 +25,7 @@ namespace Microservices.Services.CouponAPI.Controllers
         }
         // get all 
         [HttpGet]
-        public ResponseDTO GetAllCoupons()
+        public IActionResult GetAllCoupons()
         {
             try
             {
@@ -36,13 +36,13 @@ namespace Microservices.Services.CouponAPI.Controllers
             {
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
-                
+                return BadRequest(ex.Message);
             }
-            return _response;
+            return Ok(_response.Result);
         }
         // get a single coupon by id
         [HttpGet("{id:Guid}")]
-        public ResponseDTO GetCoupon(Guid id)
+        public IActionResult GetCoupon(Guid id)
         {
             try
             {
@@ -54,8 +54,9 @@ namespace Microservices.Services.CouponAPI.Controllers
             {
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
+                return BadRequest(ex.Message);
             }
-            return _response;
+            return Ok(_response.Result);
         }
         
         // create a new coupon
