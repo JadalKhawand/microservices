@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FrontEnd", "FrontEnd", "{06A763BB-4CBD-453A-9F91-14C979E18BD1}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gateway", "Gateway", "{C530845E-BA27-4642-95D2-3101B026DD1A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{4AAA1B04-E79D-4CEA-8CB1-DEECA69D7466}"
@@ -13,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{04
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservices.Services.CouponAPI", "Microservices.Services.CouponAPI\Microservices.Services.CouponAPI.csproj", "{B09A9C18-D1C7-4269-B425-E2656B443482}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "microservices.test", "microservices.test\microservices.test.csproj", "{3A302313-2B8A-4A99-9FFC-F1E04934F408}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "microservices.test", "microservices.test\microservices.test.csproj", "{3A302313-2B8A-4A99-9FFC-F1E04934F408}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
