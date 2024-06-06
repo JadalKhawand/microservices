@@ -95,6 +95,99 @@ namespace microservices.test.Controllers
             }
 
         }
+        [Fact]
+        public void CouponController_UpsertCoupon_ReturnsResponseDTO()
+        {
+            // Arrange
+            var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: "FakeDb")
+                .Options;
+
+            var fakeDb = new AppDbContext(dbContextOptions);
+            var fakeMapper = A.Fake<IMapper>();
+
+            var controller = new CouponAPIController(fakeDb, fakeMapper);
+
+            var fakeCouponDto = new CouponDto
+            {
+                CouponCode = "CODE",
+                DiscountAmount = 10,
+            };
+
+            var fakeId = Guid.NewGuid();
+
+            var fakeCoupon = new Coupon
+            {
+                CouponId = fakeId,
+                CouponCode = "OLD_CODE",
+                DiscountAmount = 20,
+            };
+
+            fakeDb.Coupons.Add(fakeCoupon);
+            fakeDb.SaveChanges();
+
+            // Act
+            var response = controller.UpsertCoupon(fakeId, fakeCouponDto);
+
+            // Assert
+            Assert.NotNull(response); 
+            Assert.IsType<ResponseDTO>(response); 
+
+            if (response.IsSuccess)
+            {
+                var updatedCoupon = fakeDb.Coupons.Find(fakeId);
+
+                Assert.NotNull(updatedCoupon);
+                Assert.Equal(fakeCouponDto.CouponCode, updatedCoupon.CouponCode);
+                Assert.Equal(fakeCouponDto.DiscountAmount, updatedCoupon.DiscountAmount);
+            }
+            else 
+            {
+                Assert.NotEmpty(response.Message); 
+            }
+        }
+        [Fact]
+        public void CouponController_DeleteCoupon_ReturnsResponseDTO()
+        {
+            // Arrange
+            var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: "FakeDb")
+                .Options;
+
+            var fakeDb = new AppDbContext(dbContextOptions);
+            var fakeMapper = A.Fake<IMapper>();
+
+            var controller = new CouponAPIController(fakeDb, fakeMapper);
+
+            var fakeCoupon = new Coupon
+            {
+                CouponId = Guid.NewGuid(),
+                CouponCode = "CODE",
+                DiscountAmount = 10,
+            };
+            fakeDb.Coupons.Add(fakeCoupon);
+            fakeDb.SaveChanges();
+
+            // Act
+            var response = controller.DeleteCoupon(fakeCoupon.CouponId);
+
+            // Assert
+            Assert.NotNull(response); 
+            Assert.IsType<ResponseDTO>(response); 
+
+            if (response.IsSuccess)
+            {
+                var deletedCoupon = fakeDb.Coupons.Find(fakeCoupon.CouponId);
+
+                Assert.Null(deletedCoupon);
+            }
+            else 
+            {
+                Assert.NotEmpty(response.Message); 
+            }
+        }
+
+
 
     }
 
