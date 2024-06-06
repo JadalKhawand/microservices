@@ -13,13 +13,14 @@ using Microsoft.AspNetCore.Mvc;
 using FakeItEasy.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using Microservices.Services.CouponAPI.Models.Dto;
 
 namespace microservices.test.Controllers
 {
     public class CouponControllerTests
     {
         [Fact]
-        public void CouponController_GetAllCoupons_ReturnsAllCoupons()
+        public void CouponController_GetAllCoupons_ReturnsOK()
         {
             // Arrange
 
@@ -52,8 +53,49 @@ namespace microservices.test.Controllers
             Assert.NotNull(results);
             Assert.Equal(2, count);
 
+        }
 
+        [Fact]
+        public void CouponController_CreateCoupon_ReturnsResponseDTO()
+        {
+            // Arrange
+            var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: "FakeDb")
+                .Options;
+
+            var fakeDb = new AppDbContext(dbContextOptions);
+            var fakeMapper = A.Fake<IMapper>();
+
+            var controller = new CouponAPIController(fakeDb, fakeMapper);
+
+            var fakeCouponDto = new CouponDto
+            {
+                CouponCode = "CODE",
+                DiscountAmount = 10,
+                MinAmount = 20
+            };
+
+            var fakeCoupon = A.Fake<Coupon>();
+            A.CallTo(() => fakeMapper.Map<Coupon>(fakeCouponDto)).Returns(fakeCoupon);
+
+            // Act
+            var response = controller.CreateCoupon(fakeCouponDto);
+
+            // Assert
+            Assert.NotNull(response);
+            Assert.IsType<ResponseDTO>(response);
+
+            if (response.IsSuccess)
+            {
+                Assert.Equal("Coupon created successfully", response.Message);
+            }
+            else
+            {
+                Assert.NotEmpty(response.Message);
+            }
 
         }
+
     }
+
 }
