@@ -29,11 +29,15 @@ namespace microservices.test.Controllers
 
             var fakeDb = new AppDbContext(dbContextOptions);
             var fakeMapper = A.Fake<IMapper>();
-            
-            var fakeCoupons = A.CollectionOfFake<Coupon>(10);
-            var fakeCouponsList = A.Fake<List<Coupon>>();
 
-            A.CallTo(() => fakeMapper.Map<List<Coupon>>(fakeCoupons)).Returns(fakeCouponsList);
+            var fakeCoupons = new List<Coupon>
+            {
+                new Coupon { CouponId = Guid.NewGuid(), CouponCode = "CODE1", DiscountAmount = 10, MinAmount = 20 },
+                new Coupon { CouponId = Guid.NewGuid(), CouponCode = "CODE2", DiscountAmount = 20, MinAmount = 40 }
+            };
+
+            fakeDb.Coupons.AddRange(fakeCoupons);
+            fakeDb.SaveChanges();
 
             var controller = new CouponAPIController(fakeDb, fakeMapper);
 
@@ -42,9 +46,15 @@ namespace microservices.test.Controllers
             var results = controller.GetAllCoupons();
 
             // Assert
-
+            var okResult = Assert.IsType<OkObjectResult>(results);
+            var coupons = Assert.IsAssignableFrom<IEnumerable<Coupon>>(okResult.Value);
+            var count = coupons.Count();
+            var result = results as OkObjectResult;
+            var returnCoupons = result?.Value as IEnumerable<Coupon>;
             Assert.NotNull(results);
-            Assert.IsType<OkObjectResult>(results);
+            Assert.Equal(2, count);
+
+
 
         }
     }
