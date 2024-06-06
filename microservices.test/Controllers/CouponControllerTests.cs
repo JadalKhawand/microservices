@@ -49,8 +49,6 @@ namespace microservices.test.Controllers
             var okResult = Assert.IsType<OkObjectResult>(results);
             var coupons = Assert.IsAssignableFrom<IEnumerable<Coupon>>(okResult.Value);
             var count = coupons.Count();
-            var result = results as OkObjectResult;
-            var returnCoupons = result?.Value as IEnumerable<Coupon>;
             Assert.NotNull(results);
             Assert.Equal(2, count);
 
