@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using Azure;
+using FakeItEasy;
 using Microservices.Services.CouponAPI.Data;
 using Microservices.Services.CouponAPI.Models;
 using Microservices.Services.CouponAPI.Models.Dto;
+using Microservices.Services.CouponAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microservices.Services.CouponAPI.Controllers
 {
@@ -14,13 +17,11 @@ namespace Microservices.Services.CouponAPI.Controllers
 
     public class CouponAPIController : ControllerBase
     {
-        private readonly AppDbContext _db;
+        private readonly ICouponService _couponService;
         private ResponseDTO _response;
-        private IMapper _mapper;
-        public CouponAPIController(AppDbContext db, IMapper mapper)
+        public CouponAPIController(ICouponService couponService)
         {
-            _db = db;
-            _mapper = mapper;
+            _couponService = couponService;
             _response = new ResponseDTO();
         }
         // get all 
@@ -29,8 +30,8 @@ namespace Microservices.Services.CouponAPI.Controllers
         {
             try
             {
-                IEnumerable<Coupon> objList = _db.Coupons.ToList();
-                _response.Result = objList;
+                var coupons = _couponService.GetAllCoupons();
+                _response.Result = coupons;
             }
             catch (Exception ex)
             {
@@ -46,8 +47,8 @@ namespace Microservices.Services.CouponAPI.Controllers
         {
             try
             {
-                Coupon obj = _db.Coupons.First(u => u.CouponId == id);
-                _response.Result = _mapper.Map<CouponDto>(obj);
+                Coupon obj = _couponService.GetCoupon(id);
+                _response.Result = obj;
 
             }
             catch (Exception ex)
@@ -65,12 +66,10 @@ namespace Microservices.Services.CouponAPI.Controllers
         {
             try
             {
-                Coupon obj = _mapper.Map<Coupon>(couponDto);
-                obj.CouponId = Guid.NewGuid();
-                _db.Coupons.Add(obj);
-                _db.SaveChanges();
-                _response.Result = _mapper.Map<CouponDto>(obj);
+                Coupon coupon = _couponService.CreateCoupon(couponDto);
+                _response.Result = coupon;
                 _response.Message = "Coupon created successfully";
+                _response.IsSuccess = true;
             }
             catch (Exception ex)
             {
@@ -86,11 +85,15 @@ namespace Microservices.Services.CouponAPI.Controllers
         {
             try
             {
-                Coupon obj = _mapper.Map<Coupon>(couponDto);
-                obj.CouponId = id;
-                _db.Coupons.Update(obj);
-                _db.SaveChanges();
-                _response.Result = _mapper.Map<CouponDto>(obj);
+                var resUpsert = _couponService.UpdateCoupon(id, couponDto);
+                if(resUpsert == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "Coupon wasn't found";
+                }
+                _response.IsSuccess = true;
+                _response.Message = "Coupon Updated successfully";
+                _response.Result = resUpsert;
             }
             catch (Exception ex)
             {
@@ -106,10 +109,12 @@ namespace Microservices.Services.CouponAPI.Controllers
         {
             try
             {
-                Coupon obj = _db.Coupons.First(u=>u.CouponId == id);
-                _db.Coupons.Remove(obj);
-                _db.SaveChanges();
-                _response.Result = obj;
+                var resDelete = _couponService.DeleteCoupon(id);
+                if(resDelete == false)
+                {
+                    _response.IsSuccess = false;
+                }
+                _response.Message = "Coupon Deleted Successfully";
             }
             catch (Exception ex)
             {
@@ -120,45 +125,40 @@ namespace Microservices.Services.CouponAPI.Controllers
         }
 
         [HttpPatch("{id:Guid}")]
-        public ResponseDTO UpdateCoupon(Guid id, JsonPatchDocument<CouponDto> patchDto)
+        public IActionResult UpdateCoupon(Guid id, JsonPatchDocument<CouponDto> patchDto)
         {
             try
             {
                 if (patchDto == null)
                 {
                     _response.IsSuccess = false;
-                    return _response;
+                    return BadRequest();
                 }
 
-                var coupon = _db.Coupons.FirstOrDefault(c => c.CouponId == id);
-                if (coupon == null)
+                var coupon = _couponService.UpdateCoupon(id, patchDto);
+                if (coupon == false)
                 {
                     _response.IsSuccess = false;
-                    return _response;
+                    return BadRequest();
                 }
 
-                var couponDto = _mapper.Map<CouponDto>(coupon);
-                patchDto.ApplyTo(couponDto, ModelState);
 
                 if (!ModelState.IsValid)
                 {
                     _response.IsSuccess = false;
-                    return _response;
+                    return BadRequest();
                 }
 
-                _mapper.Map(couponDto, coupon);
-                _db.SaveChanges();
-                _response.Result = _mapper.Map<CouponDto>(coupon);
-                return _response;
+                return Ok("coupon updated successfully");
+
             }
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
-                return _response;
+                return BadRequest();
             }
         }
-
-
+       
     }
 }

@@ -14,6 +14,9 @@ using FakeItEasy.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microservices.Services.CouponAPI.Models.Dto;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Identity;
+using NSubstitute;
 
 namespace microservices.test.Controllers
 {
@@ -23,37 +26,23 @@ namespace microservices.test.Controllers
         public void CouponController_GetAllCoupons_ReturnsOK()
         {
             // Arrange
+            var fakeCoupons = Substitute.For<IEnumerable<Coupon>>();
 
-            var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: "FakeDb")
-            .Options;
+            var couponService = Substitute.For<ICouponService>();
+            couponService.GetAllCoupons().Returns(fakeCoupons);
 
-            var fakeDb = new AppDbContext(dbContextOptions);
-            var fakeMapper = A.Fake<IMapper>();
-
-            var fakeCoupons = new List<Coupon>
-            {
-                new Coupon { CouponId = Guid.NewGuid(), CouponCode = "CODE1", DiscountAmount = 10, MinAmount = 20 },
-                new Coupon { CouponId = Guid.NewGuid(), CouponCode = "CODE2", DiscountAmount = 20, MinAmount = 40 }
-            };
-
-            fakeDb.Coupons.AddRange(fakeCoupons);
-            fakeDb.SaveChanges();
-
-            var controller = new CouponAPIController(fakeDb, fakeMapper);
+            var controller = new CouponAPIController(couponService);
 
             // Act
-
-            var results = controller.GetAllCoupons();
+            var result = controller.GetAllCoupons();
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(results);
+            var okResult = Assert.IsType<OkObjectResult>(result);
             var coupons = Assert.IsAssignableFrom<IEnumerable<Coupon>>(okResult.Value);
             var count = coupons.Count();
-            Assert.NotNull(results);
             Assert.Equal(2, count);
-
         }
+
 
         [Fact]
         public void CouponController_CreateCoupon_ReturnsResponseDTO()
@@ -184,6 +173,71 @@ namespace microservices.test.Controllers
             else 
             {
                 Assert.NotEmpty(response.Message); 
+            }
+        }
+        [Fact]
+        public void CouponController_GetCoupon_ReturnsCoupon()
+        {
+            // Arrange
+            var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: "FakeDb")
+                .Options;
+
+            var fakeDb = new AppDbContext(dbContextOptions);
+            var fakeMapper = A.Fake<IMapper>();
+
+            var controller = new CouponAPIController(fakeDb, fakeMapper);
+
+            var fakeCoupon = new Coupon
+            {
+                CouponId = Guid.NewGuid(),
+                CouponCode = "CODE",
+                DiscountAmount = 10,
+            };
+            fakeDb.Coupons.Add(fakeCoupon);
+            fakeDb.SaveChanges();
+
+            // Act
+            var response = controller.GetCoupon(fakeCoupon.CouponId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(response);
+            var couponDto = Assert.IsAssignableFrom<CouponDto>(okResult.Value); 
+        }
+        [Fact]
+        public void CouponController_UpdateCoupon_ReturnsOkResult_WithValidPatch()
+        {
+            // Arrange
+            var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: "FakeDb")
+                .Options;
+
+            using (var fakeDb = new AppDbContext(dbContextOptions))
+            {
+                var fakeMapper = A.Fake<IMapper>();
+
+                var controller = new CouponAPIController(fakeDb, fakeMapper);
+
+                var fakeCoupon = new Coupon
+                {
+                    CouponId = Guid.NewGuid(),
+                    CouponCode = "CODE",
+                    DiscountAmount = 10,
+                    MinAmount = 10
+                };
+                fakeDb.Coupons.Add(fakeCoupon);
+                fakeDb.SaveChanges();
+
+                var patchDoc = new JsonPatchDocument<CouponDto>();
+                patchDoc.Replace(c => c.MinAmount, 100);
+
+                // Act
+                var response = controller.UpdateCoupon(fakeCoupon.CouponId, patchDoc);
+
+                // Assert
+                var okResult = Assert.IsType<OkObjectResult>(response);
+                var updatedCoupon = Assert.IsType<Coupon>(okResult.Value);
+                Assert.Equal(100, updatedCoupon.MinAmount);
             }
         }
 
