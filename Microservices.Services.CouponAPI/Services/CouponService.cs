@@ -4,6 +4,7 @@ using Microservices.Services.CouponAPI.Models.Dto;
 using Microservices.Services.CouponAPI.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Azure;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Microservices.Services.CouponAPI.Services
 {
@@ -33,16 +34,18 @@ namespace Microservices.Services.CouponAPI.Services
             return coupon;
         }
 
-        public Coupon CreateCoupon(CouponDto couponDto)
+        public async Task<Coupon> CreateCoupon(CouponDto couponDto)
         {
-           
-                var coupon = _mapper.Map<Coupon>(couponDto);
-                coupon.CouponId = Guid.NewGuid();
-                _db.Coupons.Add(coupon);
-                _db.SaveChanges();
-                return coupon;
-            
+          
+            var coupon = _mapper.Map<Coupon>(couponDto);
+            coupon.CouponId = Guid.NewGuid();
+            _db.Coupons.Add(coupon);
+            await _db.SaveChangesAsync();
+
+            return coupon;
         }
+
+
 
         public Coupon UpdateCoupon(Guid id, CouponDto couponDto)
         {

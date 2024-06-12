@@ -54,7 +54,7 @@ namespace microservices.test.Controllers
 
 
         [Fact]
-        public void CouponController_CreateCoupon_ReturnsResponseDTO()
+        public void CouponController_CreateCoupon_ReturnsActionResult()
         {
             // Arrange
             var fixture = new Fixture();
@@ -72,56 +72,109 @@ namespace microservices.test.Controllers
             var result = controller.CreateCoupon(couponDto);
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal("Coupon created successfully", result.Message);
-            Assert.Equal(createdCoupon, result.Result);
+            Assert.IsType<CreatedAtActionResult>(result.Result);
+            var createdAtActionResult = (CreatedAtActionResult)result.Result;
+            Assert.Equal(nameof(CouponAPIController.CreateCoupon), createdAtActionResult.ActionName);
         }
 
-        
+
+
         [Fact]
-        public void CouponController_UpsertCoupon_ReturnsResponseDTO()
+        public void CouponController_UpdateCoupon_ReturnsActionResult()
         {
             // Arrange
             var fixture = new Fixture();
             fixture.Customize(new AutoNSubstituteCustomization());
-            var id = new Guid();
+
+            var id = Guid.NewGuid();
             var couponDto = fixture.Create<CouponDto>();
+            var couponToUpdate = fixture.Create<Coupon>();
             var updatedCoupon = fixture.Create<Coupon>();
             var couponService = Substitute.For<ICouponService>();
 
+            couponService.GetCoupon(id).Returns(couponToUpdate);
             couponService.UpdateCoupon(id, couponDto).Returns(updatedCoupon);
 
             var controller = new CouponAPIController(couponService);
 
             // Act
-            var response = controller.UpsertCoupon(id, couponDto);
+            var result = controller.UpdateEmployee(id, couponDto);
 
             // Assert
-            Assert.True(response.IsSuccess);
-            Assert.Equal("Coupon Updated successfully", response.Message);
-            Assert.Equal(updatedCoupon, response.Result);
+            Assert.IsType<OkObjectResult>(result.Result);
+            var okObjectResult = (OkObjectResult)result.Result;
+            Assert.Equal(updatedCoupon, okObjectResult.Value);
         }
-        
+
         [Fact]
-        public void CouponController_DeleteCoupon_ReturnsResponseDTO()
+        public void CouponController_DeleteCoupon_ExistingCoupon_ReturnsOk()
         {
             // Arrange
             var fixture = new Fixture();
             fixture.Customize(new AutoNSubstituteCustomization());
-            var coupon = fixture.Create<Coupon>();
+
+            var id = Guid.NewGuid();
+            var couponToDelete = fixture.Create<Coupon>();
             var couponService = Substitute.For<ICouponService>();
 
-            couponService.DeleteCoupon(coupon.CouponId).Returns(true);
+            couponService.GetCoupon(id).Returns(couponToDelete);
+            couponService.DeleteCoupon(id).Returns(true); 
 
             var controller = new CouponAPIController(couponService);
 
             // Act
-            var response = controller.DeleteCoupon(coupon.CouponId);
+            var result = controller.DeleteCoupon(id);
 
             // Assert
-            Assert.True(response.IsSuccess);
-            Assert.Equal("Coupon Deleted Successfully", response.Message);
+            Assert.IsType<OkObjectResult>(result.Result);
+            var okObjectResult = (OkObjectResult)result.Result;
+            Assert.Equal(couponToDelete, okObjectResult.Value);
         }
+
+        [Fact]
+        public void CouponController_DeleteCoupon_NonExistingCoupon_ReturnsNotFound()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var id = Guid.NewGuid();
+            var couponService = Substitute.For<ICouponService>();
+
+            couponService.GetCoupon(id).Returns((Coupon)null); // Simulate non-existing coupon
+
+            var controller = new CouponAPIController(couponService);
+
+            // Act
+            var result = controller.DeleteCoupon(id);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public void CouponController_DeleteCoupon_FailureToDelete_ReturnsBadRequest()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var id = Guid.NewGuid();
+            var couponToDelete = fixture.Create<Coupon>();
+            var couponService = Substitute.For<ICouponService>();
+
+            couponService.GetCoupon(id).Returns(couponToDelete);
+            couponService.DeleteCoupon(id).Returns(false); // Simulate deletion failure
+
+            var controller = new CouponAPIController(couponService);
+
+            // Act
+            var result = controller.DeleteCoupon(id);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
         /*
         [Fact]
         public void CouponController_GetCoupon_ReturnsCoupon()

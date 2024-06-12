@@ -6,6 +6,7 @@ using Microservices.Services.CouponAPI.Models;
 using Microservices.Services.CouponAPI.Models.Dto;
 using Microservices.Services.CouponAPI.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,104 +32,133 @@ namespace Microservices.Services.CouponAPI.Controllers
             try
             {
                 var coupons = _couponService.GetAllCoupons();
+
+                if (coupons == null)
+                    return NotFound(); 
+
                 _response.Result = coupons;
+                return Ok(coupons); 
             }
             catch (Exception ex)
             {
-                _response.IsSuccess = false;
-                _response.Message = ex.Message;
-                return BadRequest(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database"); 
             }
-            return Ok(_response.Result);
         }
+
         // get a single coupon by id
         [HttpGet("{id:Guid}")]
         public IActionResult GetCoupon(Guid id)
         {
             try
             {
-                Coupon obj = _couponService.GetCoupon(id);
-                _response.Result = obj;
+                var coupon = _couponService.GetCoupon(id);
 
+                if (coupon == null)
+                    return NotFound(); 
+
+                return Ok(coupon); 
             }
             catch (Exception ex)
             {
-                _response.IsSuccess = false;
-                _response.Message = ex.Message;
-                return BadRequest(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving coupon"); 
             }
-            return Ok(_response.Result);
         }
-        
+
+
         // create a new coupon
         [HttpPost]
-        public ResponseDTO CreateCoupon([FromBody] CouponDto couponDto)
+        public  ActionResult<Coupon> CreateCoupon([FromBody] CouponDto couponDto)
         {
             try
             {
-                Coupon coupon = _couponService.CreateCoupon(couponDto);
-                _response.Result = coupon;
-                _response.Message = "Coupon created successfully";
-                _response.IsSuccess = true;
+                if (couponDto == null)
+                    return BadRequest(); 
+
+                var createdCoupon = _couponService.CreateCoupon(couponDto);
+
+                if (createdCoupon == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error creating new coupon"); 
+
+                return CreatedAtAction(nameof(CreateCoupon), createdCoupon); // 201 Created
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _response.IsSuccess = false;
-                _response.Message = ex.Message;
-                _response.InnerExceptionMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new coupon"); 
             }
-            return _response;
         }
+
         // update an existing coupon
-        [HttpPut]
-        public ResponseDTO UpsertCoupon([FromQuery] Guid id, [FromBody] CouponDto couponDto)
+        [HttpPut("{id:Guid}")]
+        public ActionResult<Coupon> UpdateEmployee(Guid id, CouponDto couponDto)
         {
             try
             {
-                var resUpsert = _couponService.UpdateCoupon(id, couponDto);
-                if(resUpsert == null)
-                {
-                    _response.IsSuccess = false;
-                    _response.Message = "Coupon wasn't found";
-                }
-                _response.IsSuccess = true;
-                _response.Message = "Coupon Updated successfully";
-                _response.Result = resUpsert;
+                var couponToUpdate =  _couponService.GetCoupon(id);
+
+                if (couponToUpdate == null)
+                    return NotFound($"Coupon with Id = {id} not found");
+
+                var updatedCoupon =  _couponService.UpdateCoupon(id, couponDto);
+
+                if (updatedCoupon == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error updating data");
+
+                return Ok(updatedCoupon);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _response.IsSuccess = false;
-                _response.Message = ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data"); 
             }
-            return _response;
         }
+
+
         // Delete an existing coupon
         [HttpDelete("{id:Guid}")]
-       
-        public ResponseDTO DeleteCoupon(Guid id)
+        public ActionResult<Coupon> DeleteCoupon(Guid id)
         {
             try
             {
-                var resDelete = _couponService.DeleteCoupon(id);
-                if(resDelete == false)
+                var couponToDelete = _couponService.GetCoupon(id);
+
+                if (couponToDelete == null)
                 {
-                    _response.IsSuccess = false;
+                    return NotFound($"Coupon with Id = {id} not found"); 
                 }
-                _response.Message = "Coupon Deleted Successfully";
+
+                var deleteResult = _couponService.DeleteCoupon(id);
+
+                if (!deleteResult)
+                {
+                    return BadRequest("Error deleting coupon"); 
+                }
+
+                return Ok(couponToDelete); 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _response.IsSuccess = false;
-                _response.Message = ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting coupon");
             }
-            return _response;
         }
+
+
+
 
         [HttpPatch("{id:Guid}")]
         public IActionResult UpdateCoupon(Guid id, JsonPatchDocument<CouponDto> patchDto)
         {
             try
             {
+                var couponToUpdate = _couponService.GetCoupon(id);
+
+                if (couponToUpdate == null)
+                    return NotFound($"Employee with Id = {id} not found");
+
                 if (patchDto == null)
                 {
                     _response.IsSuccess = false;
