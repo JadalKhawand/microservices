@@ -161,31 +161,23 @@ namespace Microservices.Services.CouponAPI.Controllers
 
                 if (patchDto == null)
                 {
-                    _response.IsSuccess = false;
                     return BadRequest();
                 }
 
                 var coupon = _couponService.UpdateCoupon(id, patchDto);
                 if (coupon == false)
                 {
-                    _response.IsSuccess = false;
                     return BadRequest();
                 }
 
 
-                if (!ModelState.IsValid)
-                {
-                    _response.IsSuccess = false;
-                    return BadRequest();
-                }
+                var updatedCoupon = _couponService.GetCoupon(id);
 
-                return Ok("coupon updated successfully");
+                return Ok(updatedCoupon);
 
             }
             catch (Exception ex)
             {
-                _response.IsSuccess = false;
-                _response.Message = ex.Message;
                 return BadRequest();
             }
         }

@@ -3,6 +3,9 @@ using Microservices.Services.CouponAPI;
 using Microservices.Services.CouponAPI.Data;
 using Microservices.Services.CouponAPI.Services;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
+
 
 var builder = WebApplication.CreateBuilder(args);
 

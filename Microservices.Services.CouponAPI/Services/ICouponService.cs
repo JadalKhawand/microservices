@@ -8,7 +8,7 @@ namespace Microservices.Services.CouponAPI.Services
     {
         List<Coupon> GetAllCoupons();
         Coupon GetCoupon(Guid id);
-        Task<Coupon> CreateCoupon(CouponDto couponDto);
+        Coupon CreateCoupon(CouponDto couponDto);
         Coupon UpdateCoupon(Guid id, CouponDto couponDto);
         bool DeleteCoupon(Guid id);
         bool UpdateCoupon(Guid id, JsonPatchDocument<CouponDto> patchDto);

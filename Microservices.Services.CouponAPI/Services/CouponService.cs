@@ -34,13 +34,13 @@ namespace Microservices.Services.CouponAPI.Services
             return coupon;
         }
 
-        public async Task<Coupon> CreateCoupon(CouponDto couponDto)
+        public Coupon CreateCoupon(CouponDto couponDto)
         {
           
             var coupon = _mapper.Map<Coupon>(couponDto);
             coupon.CouponId = Guid.NewGuid();
             _db.Coupons.Add(coupon);
-            await _db.SaveChangesAsync();
+            _db.SaveChangesAsync();
 
             return coupon;
         }
