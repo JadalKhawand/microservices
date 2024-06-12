@@ -14,7 +14,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Microservices.Services.CouponAPI.Controllers
 {
     [ApiController]
-    [Route("api/coupons")]
+    [Route("api/v1/coupons")]
+
 
     public class CouponAPIController : ControllerBase
     {
